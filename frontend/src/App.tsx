@@ -15,13 +15,13 @@ function App() {
         >
             <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 50, display: 'flex', gap: '10px' }}>
                 <button
-                    onClick={() => addPostIt("새 메모입니다", "#fef08a")} // 노란색 추가
+                    onClick={() => addPostIt("새 메모입니다", "#fef08a")}
                     style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
                     + 노란 메모
                 </button>
                 <button
-                    onClick={() => addPostIt("중요한 메모!", "#fca5a5")} // 분홍색 추가
+                    onClick={() => addPostIt("중요한 메모!", "#fca5a5")}
                     style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
                     + 분홍 메모

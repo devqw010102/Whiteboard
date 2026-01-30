@@ -1,42 +1,42 @@
 import React from 'react';
-import PostItItem from './components/PostItItem';
-import { usePostIts } from './hooks/usePostIts';
+import PostItItem from "./components/PostItItem";
+import { usePostIts } from "./hooks/usePostIts";
 
 function App() {
-
-    const { postIts, handleDragStart, handleDrop, boardRef } = usePostIts();
-
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-    };
+    const { postIts, addPostIt, deletePostIt, updatePostItContent, handleDragStart, handleDrop, boardRef } = usePostIts();
 
     return (
         <div
             ref={boardRef}
-            onDragOver={handleDragOver}
+            onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            style={{
-                width: '100vw',
-                height: '100vh',
-                background: '#fafafa',
-                position: 'relative',
-                overflow: 'hidden'
-            }}
+            className="relative w-screen h-screen bg-slate-100 overflow-hidden"
+            style={{ position: 'relative', width: '100vw', height: '100vh' }}
         >
-            <h2 style={{ padding: '20px', color: '#333', pointerEvents: 'none' }}>
-                내 포스트잇 보드 (드래그 테스트)
-            </h2>
-
+            <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 50, display: 'flex', gap: '10px' }}>
+                <button
+                    onClick={() => addPostIt("새 메모입니다", "#fef08a")} // 노란색 추가
+                    style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc' }}
+                >
+                    + 노란 메모
+                </button>
+                <button
+                    onClick={() => addPostIt("중요한 메모!", "#fca5a5")} // 분홍색 추가
+                    style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc' }}
+                >
+                    + 분홍 메모
+                </button>
+            </div>
             {postIts.map(note => (
                 <PostItItem
                     key={note.id}
                     {...note}
                     onDragStart={handleDragStart}
+                    onDelete={deletePostIt}
+                    onUpdateContent={updatePostItContent}
                 />
             ))}
         </div>
     );
 }
-
 export default App;

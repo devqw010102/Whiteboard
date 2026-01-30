@@ -1,26 +1,42 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import PostItItem from './components/PostItItem';
+import { usePostIts } from './hooks/usePostIts';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+
+    const { postIts, handleDragStart, handleDrop, boardRef } = usePostIts();
+
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
+    return (
+        <div
+            ref={boardRef}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            style={{
+                width: '100vw',
+                height: '100vh',
+                background: '#fafafa',
+                position: 'relative',
+                overflow: 'hidden'
+            }}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+            <h2 style={{ padding: '20px', color: '#333', pointerEvents: 'none' }}>
+                내 포스트잇 보드 (드래그 테스트)
+            </h2>
+
+            {postIts.map(note => (
+                <PostItItem
+                    key={note.id}
+                    {...note}
+                    onDragStart={handleDragStart}
+                />
+            ))}
+        </div>
+    );
 }
 
 export default App;

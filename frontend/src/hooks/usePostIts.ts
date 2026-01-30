@@ -20,7 +20,7 @@ export const usePostIts = () => {
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        // dataTransfer에 확실히 박아넣기
+
         e.dataTransfer.setData("id", id.toString());
         e.dataTransfer.setData("offsetX", (e.clientX - rect.left).toString());
         e.dataTransfer.setData("offsetY", (e.clientY - rect.top).toString());

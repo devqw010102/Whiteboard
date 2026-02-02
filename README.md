@@ -22,7 +22,7 @@
 ## 🛠 기술 스택
 
 ### Frontend
-- **React 18** (TypeScript)
+- **React 19** (TypeScript)
 - **StompJS & SockJS**: 실시간 메시징 처리
 - **Axios**: API 통신
 

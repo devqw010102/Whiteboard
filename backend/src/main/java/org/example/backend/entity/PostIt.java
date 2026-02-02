@@ -21,9 +21,20 @@ public class PostIt {
 
     private String color; // 배경색
 
+    @Column(columnDefinition = "int default 10")
+    private Integer zIndex; // z-index
+
     // 위치 업데이트
     public void updatePosition(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+
+    public void updateZIndex(int zIndex) {
+        this.zIndex = zIndex;
+    }
+
+    public void updateColor(String color) {
+        this.color = color;
     }
 }

@@ -3,7 +3,7 @@ import PostItItem from "./components/PostItItem";
 import { usePostIts } from "./hooks/usePostIts";
 
 function App() {
-    const { postIts, addPostIt, deletePostIt, updatePostItContent, handleDragStart, handleDrop, boardRef } = usePostIts();
+    const { postIts, addPostIt, deletePostIt, updatePostItContent, handleDragStart, handleDrop, boardRef, updatePostItColor, handleBringToFront } = usePostIts();
 
     return (
         <div
@@ -29,12 +29,13 @@ function App() {
             </div>
             {postIts.map(note => (
                 <PostItItem
-                    key={note.id}
+                    zIndex={0} key={note.id}
                     {...note}
                     onDragStart={handleDragStart}
                     onDelete={deletePostIt}
                     onUpdateContent={updatePostItContent}
-                />
+                    onUpdateColor={updatePostItColor}
+                    onFocus={handleBringToFront}                />
             ))}
         </div>
     );

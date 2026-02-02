@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { PostIt, postItApi } from '../data/postItApi';
 import { postItService } from '../service/postItService';
+import {Client} from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 export const usePostIts = () => {
     const [postIts, setPostIts] = useState<PostIt[]>([]);
     const boardRef = useRef<HTMLDivElement>(null);
+    const stompClient = useRef<Client | null>(null);
+    const [highestZ, setHighestZ] = useState(10);
 
     useEffect(() => {
         const loadPostIts = async () => {
@@ -16,36 +20,81 @@ export const usePostIts = () => {
             }
         };
         loadPostIts();
+
+        const client = new Client({
+            webSocketFactory: () => new SockJS('http://localhost:8080/ws-postits'),
+            reconnectDelay: 5000,
+            onConnect: () => {
+                console.log("WebSocket Connected");
+
+                client.subscribe('/topic/public', (message) => {
+                    const data = JSON.parse(message.body);
+
+                    if(typeof data === 'number') {
+                        setPostIts(prev => prev.filter(p => p.id !== data));
+                    }
+                    else {
+                        setPostIts(prev => {
+                            const exists = prev.find(p => p.id === data.id);
+                            if(exists) {
+                                return prev.map(p => p.id === data.id ? data : p);
+                            }
+                            return [...prev, data];
+                        });
+                    }
+
+
+                });
+            },
+            onStompError : (frame) => {console.error("STOMP ERROR:", frame.headers);}
+        });
+
+        client.activate();
+        stompClient.current = client;
+
+        return () => {if(stompClient.current) stompClient.current.deactivate();};
     }, []);
 
+    const sendWSMessage = (destination: string, data: any) => {
+        if(stompClient.current && stompClient.current.connected) {
+            stompClient.current.publish({
+                destination: `/app${destination}`,
+                body: JSON.stringify(data)
+            });
+        }
+    };
+
     const addPostIt = async (content: string, color: string) => {
-        try {
-            const newNote = await postItService.createNewPostIt(content, color);
-            setPostIts(prev => [...prev, newNote]);
-        } catch (e) {
-            console.error("추가 실패:", e);
+        const newNote = {
+            content : content,
+            x :  100 + Math.random() * 300,
+            y : 100 + Math.random() * 300,
+            color : color
+        };
+
+        if(stompClient.current && stompClient.current.connected) {
+            stompClient.current.publish({
+                destination: '/app/create',
+                body: JSON.stringify(newNote)
+            });
         }
     };
 
     const deletePostIt = async (id: number) => {
-        try {
-            await postItService.removePostIt(id);
-            setPostIts(prev => prev.filter(p => p.id !== id));
-        } catch (e) {
-            console.error("삭제 실패:", e);
+        if(stompClient.current && stompClient.current.connected) {
+            stompClient.current.publish({
+                destination: '/app/delete',
+                body: JSON.stringify(id)
+            })
         }
     };
 
     const updatePostItContent = async(id: number, newContent: string) => {
-        setPostIts(prev => prev.map(p =>
-        p.id === id? {...p, content: newContent} : p
-        ));
-
-        try {
-            await postItApi.updateContent(id, newContent);
-        }
-        catch(e) {
-            console.error("내용 저장 실패:", e);
+        if(stompClient.current && stompClient.current.connected) {
+            stompClient.current.publish({
+                destination: '/app/edit',
+                body: JSON.stringify({ id, content: newContent })
+            })
         }
     }
 
@@ -76,16 +125,20 @@ export const usePostIts = () => {
         const newX = Math.round(e.clientX - boardRect.left - offsetX);
         const newY = Math.round(e.clientY - boardRect.top - offsetY);
 
-        setPostIts(prev => prev.map(p =>
-            p.id === Number(id) ? { ...p, x: newX, y: newY } : p
-        ));
-
-        try {
-            await postItApi.updatePosition(Number(id), newX, newY);
-        } catch (e) {
-            console.error("위치 저장 실패:", e);
-        }
+        const updatedPostIt = {id: Number(id), x : newX, y: newY};
+        sendWSMessage('/move', updatedPostIt);
     };
+
+    const handleBringToFront = (id: number) => {
+        const newZ = highestZ + 1;
+        setHighestZ(newZ);
+
+        sendWSMessage('/front', {id, zIndex : newZ});
+    }
+
+    const updatePostItColor = (id: number, color: string) => {
+        sendWSMessage('/color', {id, color});
+    }
 
     return {
         postIts,
@@ -94,6 +147,8 @@ export const usePostIts = () => {
         updatePostItContent,
         handleDragStart,
         handleDrop,
-        boardRef
+        boardRef,
+        handleBringToFront,
+        updatePostItColor
     };
 };

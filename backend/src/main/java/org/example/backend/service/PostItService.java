@@ -48,4 +48,18 @@ public class PostItService {
 
         return postItRepository.save(postIt);
     }
+
+    @Transactional
+    public PostIt updateZIndex(Long id, int zIndex) {
+        PostIt postIt = postItRepository.findById(id).orElseThrow();
+        postIt.updateZIndex(zIndex);
+        return postItRepository.save(postIt);
+    }
+
+    @Transactional
+    public PostIt updateColor(Long id, String color) {
+        PostIt postIt = postItRepository.findById(id).orElseThrow();
+        postIt.updateColor(color);
+        return postItRepository.save(postIt);
+    }
 }

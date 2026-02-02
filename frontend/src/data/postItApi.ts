@@ -8,6 +8,7 @@ export interface PostIt {
     x: number;
     y: number;
     color: string;
+    zIndex: number;
 }
 
 export const postItApi = {

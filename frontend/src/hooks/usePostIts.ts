@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { PostIt, postItApi } from '../data/postItApi';
-import { postItService } from '../service/postItService';
 import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-export const usePostIts = () => {
+export const usePostIts = (onCursorReceived?: (data: any) => void) => {
     const [postIts, setPostIts] = useState<PostIt[]>([]);
     const boardRef = useRef<HTMLDivElement>(null);
     const stompClient = useRef<Client | null>(null);
@@ -29,6 +28,11 @@ export const usePostIts = () => {
 
                 client.subscribe('/topic/public', (message) => {
                     const data = JSON.parse(message.body);
+
+                    if(data.userId) {
+                        if(onCursorReceived) onCursorReceived(data);
+                        return;
+                    }
 
                     if(typeof data === 'number') {
                         setPostIts(prev => prev.filter(p => p.id !== data));
@@ -142,6 +146,7 @@ export const usePostIts = () => {
 
     return {
         postIts,
+        stompClient,
         addPostIt,
         deletePostIt,
         updatePostItContent,

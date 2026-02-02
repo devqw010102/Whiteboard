@@ -74,7 +74,7 @@ const PostItItem = ({ id, content, x, y, color, zIndex, onDragStart, onDelete, o
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            setShowConfirm(true); // 바로 지우지 않고 확인 모드로
+                            setShowConfirm(true);
                         }}
                         style={{ cursor: 'pointer', border: 'none', background: 'transparent', fontSize: '14px', opacity: 0.5 }}
                     >✕</button>

@@ -58,4 +58,10 @@ public class PostItMessageController {
         int zIndex =  (int) payload.get("zIndex");
         return postItService.updateZIndex(id, zIndex);
     }
+
+    @MessageMapping("/cursor")
+    @SendTo("/topic/public")
+    public Map<String, Object> streamCursor(Map<String, Object> cursorData){
+        return cursorData;
+    }
 }

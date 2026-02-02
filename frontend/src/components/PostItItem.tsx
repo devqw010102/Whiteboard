@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { X } from "lucide-react";
 
 interface PostItProps {
@@ -7,16 +7,25 @@ interface PostItProps {
     x: number;
     y: number;
     color: string;
+    zIndex: number;
     onDragStart: (e: React.DragEvent<HTMLDivElement>, id: number) => void;
     onDelete: (id: number) => void;
     onUpdateContent: (id:number, content: string) => void;
+    onUpdateColor: (id: number, color: string) => void;
+    onFocus: (id: number) => void;
 }
 
-const PostItItem = ({ id, content, x, y, color, onDragStart, onDelete, onUpdateContent }: PostItProps) => {
+const colors = ["#fef08a", "#fca5af", "#bfdbfe", "#bbf7d0", "#ddd6fe"];
+
+const PostItItem = ({ id, content, x, y, color, zIndex, onDragStart, onDelete, onUpdateContent, onUpdateColor, onFocus }: PostItProps) => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [text, setText] = useState(content);
+    const [showConfirm, setShowConfirm] = useState(false);
 
+    useEffect(() => {
+        setText(content);
+    }, [content])
 
     const handleBlur = () => {
         setIsEditing(false);
@@ -29,6 +38,7 @@ const PostItItem = ({ id, content, x, y, color, onDragStart, onDelete, onUpdateC
         <div
             draggable={!isEditing}
             onDragStart={(e) => onDragStart(e, id)}
+            onMouseDown={() => onFocus(id)}
             style={{
                 left: `${x}px`,
                 top: `${y}px`,
@@ -41,35 +51,44 @@ const PostItItem = ({ id, content, x, y, color, onDragStart, onDelete, onUpdateC
                 cursor: isEditing ? 'text' : 'grab',
                 display: 'flex',
                 flexDirection: 'column',
-                zIndex: isEditing ? 100 : 10,
-                boxSizing: 'border-box'
+                zIndex: isEditing ? 9999 : (zIndex || 10),
+                boxSizing: 'border-box',
+                transition: 'background-color 0.3s ease'
             }}
         >
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(id);
-                    }}
-                    style={{
-                        cursor: 'pointer',
-                        border: '1px solid #ccc',
-                        background: 'white',
-                        padding: '2px 6px',
-                        fontSize: '12px'
-                    }}
-                >
-                    ✕
-                </button>
+            {/* 삭제 확인 */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '24px' }}>
+                {showConfirm ? (
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', animation: 'fadeIn 0.2s' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#666' }}>삭제?</span>
+                        <button
+                            onClick={() => onDelete(id)}
+                            style={{ cursor: 'pointer', border: '1px solid red', background: 'white', color: 'red', fontSize: '10px', padding: '1px 4px' }}
+                        >확인</button>
+                        <button
+                            onClick={() => setShowConfirm(false)}
+                            style={{ cursor: 'pointer', border: '1px solid #ccc', background: 'white', fontSize: '10px', padding: '1px 4px' }}
+                        >취소</button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowConfirm(true); // 바로 지우지 않고 확인 모드로
+                        }}
+                        style={{ cursor: 'pointer', border: 'none', background: 'transparent', fontSize: '14px', opacity: 0.5 }}
+                    >✕</button>
+                )}
             </div>
 
+            {/* 내용 영역 */}
             <div
                 style={{
-                    marginTop: '10px',
+                    marginTop: '5px',
                     flex: 1,
                     wordBreak: 'break-all',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    overflowY: 'auto'
                 }}
                 onDoubleClick={() => setIsEditing(true)}
             >
@@ -80,20 +99,37 @@ const PostItItem = ({ id, content, x, y, color, onDragStart, onDelete, onUpdateC
                         onChange={(e) => setText(e.target.value)}
                         onBlur={handleBlur}
                         style={{
-                            width: '100%',
-                            height: '100%',
-                            border: 'none',
-                            background: 'transparent',
-                            resize: 'none',
-                            outline: 'none',
-                            fontFamily: 'inherit',
-                            fontSize: 'inherit'
+                            width: '100%', height: '100%', border: 'none', background: 'transparent',
+                            resize: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 'inherit'
                         }}
                     />
                 ) : (
                     content
                 )}
             </div>
+
+            {/* 색상 선택 */}
+            {!isEditing && (
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', justifyContent: 'center' }}>
+                    {colors.map(c => (
+                        <div
+                            key={c}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUpdateColor(id, c);
+                            }}
+                            style={{
+                                width: '12px', height: '12px', backgroundColor: c,
+                                borderRadius: '50%', cursor: 'pointer',
+                                border: color === c ? '2px solid #333' : '1px solid rgba(0,0,0,0.1)',
+                                transition: 'transform 0.1s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
